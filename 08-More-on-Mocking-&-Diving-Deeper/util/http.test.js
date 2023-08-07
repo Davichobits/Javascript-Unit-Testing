@@ -1,6 +1,7 @@
 import { expect, it, vi } from "vitest";
 
 import { sendDataRequest } from './http';
+import { HttpError } from "./errors";
 
 const testResponseData = {testKey: 'testData'}
 
@@ -39,4 +40,23 @@ it('should convert the provided data to JSON before sending the request', async 
     errorMessage = error;
   }
   expect(testData).not.toBe('Not a string.')
+})
+
+it('should throw an HttpError in case of non-ok response', ()=>{
+  testFetch.mockImplementation((url, options)=>{
+    return new Promise((resolve, reject)=>{
+  
+      const testResponse = {
+        ok: false,
+        json() {
+          return new Promise((resolve, reject)=>{
+            resolve(testResponseData)
+          })
+        }
+      }
+      resolve(testResponse)
+    })
+  })
+  const testData = {key: 'test'}
+  return expect(sendDataRequest(testData)).rejects.toBeInstanceOf(HttpError)
 })
